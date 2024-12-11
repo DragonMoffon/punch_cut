@@ -76,6 +76,7 @@ class Fighter:
     state: State = State.IDLE
     direction: Direction = Direction.NONE
     is_grounded: bool = False
+    on_wall: bool = False
     jumped: bool = False
     jump_count: int = 0
 
@@ -107,3 +108,4 @@ class FighterSnapshot(NamedTuple):
 @dataclass
 class Attack:
     owner: int
+

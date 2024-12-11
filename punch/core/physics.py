@@ -67,6 +67,25 @@ class Stage:
             drag = FIGHTER_FRICTION_HOLD if holding else FIGHTER_FRICTION_RELEASE
             fighter.velocity += Vec2(drag * FIGHTER_JUMP_FALL * GLOBAL_FIXED_CLOCK.delta_time * -v_dir.x, 0)
 
+        is_grounded, on_wall = self._process_fighter_bounds_check(fighter)
+
+        can_jump = fighter.can_jump()
+        if is_grounded and can_jump and (fighter.jumped or GLOBAL_FIXED_CLOCK.time_since(fighter.jump_time) < FIGHTER_CAYOTE):
+            fighter.velocity += Vec2(0.0, FIGHTER_JUMP_SPEED)
+        fighter.jumped = False
+
+        if not is_grounded and fighter.is_grounded:
+            # Left the ground this frame
+            fighter.ground_time = GLOBAL_FIXED_CLOCK.time
+        fighter.is_grounded = is_grounded
+        fighter.on_wall = on_wall
+
+        # TODO calculate the state oh god
+        
+        # Apply velocity
+        fighter.position += fighter.velocity * GLOBAL_FIXED_CLOCK.delta_time
+
+    def _process_fighter_bounds_check(self, fighter: Fighter) -> tuple[bool, bool]:
         # Bounds Collision
         x, y, w, h = self.bounds.xywh
         l, r, b, t = self.bounds.lrbt
@@ -74,6 +93,7 @@ class Stage:
         fl, fr, fb, ft = fx - FIGHTER_H_WIDTH, fx + FIGHTER_H_WIDTH, fy - FIGHTER_H_HEIGHT, fy + FIGHTER_H_HEIGHT
 
         is_grounded = False
+        on_wall = False
         if (r < fr or fl < l or t < ft or fb < b):
             dx = 2.0 * (fx - x) / (w - FIGHTER_WIDTH)
             dy = 2.0 * (fy - y) / (h - FIGHTER_HEIGHT)
@@ -100,10 +120,12 @@ class Stage:
                 # Hit left wall
                 normal = Vec2(-1.0, 0.0)
                 collision_depth = abs(x - fx) - 0.5 * (w - FIGHTER_WIDTH)
+                on_wall = True
             elif dx <= -1.0:
                 # Hit Right wall
                 normal = Vec2(1.0, 0.0)
                 collision_depth = abs(x - fx) - 0.5 * (w - FIGHTER_WIDTH)
+                on_wall = True
             else:
                 normal = Vec2()
                 collision_depth = 0.0
@@ -112,18 +134,4 @@ class Stage:
             impulse = -1 * normal.dot(fighter.velocity)
             fighter.velocity += max(0.0, impulse) * normal
             fighter.position += collision_depth * normal
-
-        can_jump = fighter.can_jump()
-        if is_grounded and can_jump and (fighter.jumped or GLOBAL_FIXED_CLOCK.time_since(fighter.jump_time) < FIGHTER_CAYOTE):
-            fighter.velocity += Vec2(0.0, FIGHTER_JUMP_SPEED)
-        fighter.jumped = False
-
-        if not is_grounded and fighter.is_grounded:
-            # Left the ground this frame
-            fighter.ground_time = GLOBAL_FIXED_CLOCK.time
-        fighter.is_grounded = is_grounded
-
-        # TODO calculate the state oh god
-        
-        # Apply velocity
-        fighter.position += fighter.velocity * GLOBAL_FIXED_CLOCK.delta_time
+        return is_grounded, on_wall

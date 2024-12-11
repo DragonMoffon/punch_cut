@@ -1,6 +1,6 @@
 from punch.lib.application import View
 
-from arcade import draw_sprite, SpriteSolidColor, SpriteCircle, Vec2
+from arcade import draw_sprite, SpriteSolidColor, SpriteCircle, Vec2, Camera2D
 from arcade.future.input import ActionState
 from arcade.clock import GLOBAL_FIXED_CLOCK
 
@@ -68,6 +68,8 @@ class RootView(View):
         self.player_sprite.position = self.player.position
 
         self.player.direction = Direction.get(h, v)
+
+
 
     def on_fixed_update(self, delta_time):
         self.stage.process()
